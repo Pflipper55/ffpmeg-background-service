@@ -21,8 +21,7 @@ public class VideoEncoderService
 
     public async Task<List<Tuple<Guid,bool>>> StartProcessingAsync(int jobCount)
     {
-        var x = await ProcessJobsAsync(jobCount);
-        return x;
+        return await ProcessJobsAsync(jobCount);
     }
 
     private async Task<List<Tuple<Guid, bool>>> ProcessJobsAsync(int jobCount)
@@ -30,7 +29,11 @@ public class VideoEncoderService
         var result = new List<Tuple<Guid, bool>>();
         for (var index = 0; index < jobCount; index++)
         {
-            var job = await _channel.Reader.ReadAsync();
+            if (!_channel.Reader.TryRead(out var job))
+            {
+                this._logger.LogInformation("Queue is empty. Closing the loop");
+                break; 
+            }
             var download = Path.Combine(Environment.CurrentDirectory, job.VideoName)+".mp4";
             var successDownload = await _storageService.DownloadAsync(job.FileUrl, download);
             if(successDownload)
