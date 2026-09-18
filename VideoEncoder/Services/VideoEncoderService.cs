@@ -39,7 +39,7 @@ public class VideoEncoderService
             if(successDownload)
             {
                 this._logger.LogDebug("Start processing video with id: {0}", job.Id);
-                var ffpmegResult = await RunFFmpegAsync(download, job.Id);
+                var ffpmegResult = await RunFFmpegAsync(download, job.FileUrl, job.Id);
                 this._logger.LogDebug("Video with id: {0} processing result {1}", job.Id, ffpmegResult);
                 result.Add(new Tuple<Guid, bool>(job.Id, ffpmegResult));
             }
@@ -48,11 +48,15 @@ public class VideoEncoderService
                 this._logger.LogError("Video with id: {0} had an error during download", job.Id);
                 result.Add(new Tuple<Guid, bool>(job.Id, false));
             }
+            if(File.Exists(download))
+            {
+                File.Delete(download);
+            }
         }
         return result;
     }
 
-    private async Task<bool> RunFFmpegAsync(string input, Guid jobId)
+    private async Task<bool> RunFFmpegAsync(string input, string sourcePath, Guid jobId)
     {
         var outputDirectory = Path.Combine(Path.GetTempPath(), "VideoEncoder", jobId.ToString());
         Directory.CreateDirectory(Path.Combine(outputDirectory, "v0"));
@@ -108,7 +112,8 @@ public class VideoEncoderService
             return false;
         }
 
-        var destinationDirectory = Path.Combine(Environment.CurrentDirectory, "Videos", jobId.ToString());
+        var sourceDirectory = Path.GetDirectoryName(sourcePath) ?? string.Empty;
+        var destinationDirectory = Path.Combine(sourceDirectory, jobId.ToString());
         foreach (var file in Directory.EnumerateFiles(outputDirectory, "*", SearchOption.AllDirectories))
         {
             var relativePath = Path.GetRelativePath(outputDirectory, file);

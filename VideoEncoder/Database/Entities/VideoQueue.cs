@@ -14,5 +14,8 @@ public class VideoQueue
 
     public Guid UserId { get; set; } = Guid.Empty;
 
+    /// <summary>
+    /// Name of Bucket or Filesystem URI
+    /// </summary>
     public string FileUrl { get; set; } = string.Empty;
 }

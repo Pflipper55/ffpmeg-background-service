@@ -3,9 +3,11 @@ using VideoEncoder;
 using VideoEncoder.Database;
 using VideoEncoder.Services;
 using VideoEncoder.Services.Storage;
+using VideoEncoder.Settings;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddLogging();
+builder.Services.Configure<S3Settings>(builder.Configuration.GetSection("S3Settings"));
 builder.Services.AddDbContext<VideoEncoderDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -22,7 +24,7 @@ builder.Services.AddDbContext<VideoEncoderDbContext>(options =>
         }));
 
 
-builder.Services.AddTransient<IStorageService, LocalStorageService>();
+builder.Services.AddTransient<IStorageService, S3StorageService>();
 builder.Services.AddSingleton<VideoEncoderService>();
        
 builder.Services.AddHostedService<Worker>();
