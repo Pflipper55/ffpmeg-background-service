@@ -59,3 +59,4 @@ nunit-*.xml
 db-data/
 pgadmin-data/
 .env
+VideoEncoder/appsettings.Development.json
