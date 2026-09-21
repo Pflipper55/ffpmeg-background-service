@@ -13,6 +13,30 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - ${PWD}/db-data/:/var/lib/postgresql/data/
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  video-encoder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      database:
+        condition: service_healthy
+      local-s3:
+        condition: service_started
+    environment:
+      ConnectionStrings__DefaultConnection: Host=database;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      S3Settings__AccessKey: ${S3_ACCESS_KEY}
+      S3Settings__SecretKey: ${S3_SECRET_KEY}
+      S3Settings__ServiceUrl: http://local-s3:9000
+      S3Settings__BucketName: testvideo
+      S3Settings__Region: us-east-1
+    networks:
+      - postgres-network
 
   pgadmin:
     image: dpage/pgadmin4
@@ -32,7 +56,7 @@ services:
     ports:
       - 9000:9000
     environment:
-      S3_ACCOUNT_APP: ${S3_ACCOUNT_APP:-local-access:local-secret}
+      S3_ACCOUNT_APP: ${S3_ACCESS_KEY}:${S3_SECRET_KEY}
     volumes:
       - local-s3-data:/data
     networks:

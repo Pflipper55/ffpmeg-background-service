@@ -10,7 +10,7 @@ public class S3StorageService : IStorageService
 {
     private readonly ILogger<S3StorageService> _logger;
     private readonly S3Settings _settings;
-    public S3StorageService(ILogger<S3StorageService> logger, IOptions<S3Settings> options, )
+    public S3StorageService(ILogger<S3StorageService> logger, IOptions<S3Settings> options)
     {
         this._logger = logger;
         this._settings = options.Value ?? throw new ArgumentNullException(nameof(options));
